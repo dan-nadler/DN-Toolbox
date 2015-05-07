@@ -15,7 +15,6 @@ d = x.*sin(x);
 t = triu(bsxfun(@min,d,d.'),1); % The upper trianglar random values
 M = diag(d)+t+t.'; % Put them together in a symmetric matrix
 Mvec = M(:);
-% surf(M);
 
 n.X = sin(rand(10000, numel(Mvec))*4 + repmat(Mvec, 1, 10000)' * 5 )/5;
 n.Y = rand(10000,11)/5 + ( repmat([-1:.2:1],10000,1).^2 );
