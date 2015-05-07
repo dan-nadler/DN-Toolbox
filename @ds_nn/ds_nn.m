@@ -83,7 +83,7 @@ classdef ds_nn < handle
                     obj.N = Nc;
                 end
             else
-                error('DeepStocks:SetN','Could not read N. Type should be Array or Cell Array');
+                error('PAIL:Set:N','Could not read N. Type should be Array or Cell Array');
             end
         end
         
@@ -101,7 +101,7 @@ classdef ds_nn < handle
                         throw(ME);
                     end                        
                 else
-                    error('DeepStocks:SetF','Could not read F. Type should be Cell Array');
+                    error('PAIL:Set:F','Could not read F. Type should be Cell Array');
                 end
             end
         end
@@ -115,6 +115,8 @@ classdef ds_nn < handle
                     obj.trainer = @trainer_backprop;
                 case 'newton'
                     obj.trainer = @trainer_backprop_quasi_newton;
+                otherwise
+                    error('PAIL:Set:Trainer',['Invalid trainer requested: ' trainer]);
             end
         end
         
@@ -122,6 +124,7 @@ classdef ds_nn < handle
             
             if isempty( obj.W )
                 %random weights and bias matrix initialization
+                fprintf('Initializing model with random values.\n');
                 numLayers = size(obj.F,1);
                 obj.W{1,1} = (rand(size(obj.X,2),obj.N{1})-.5)*2; %input to hidden weights matrix
                 obj.B{1,1} = (rand(1,obj.N{1})-.5)*2; %1st hidden layer bias
@@ -138,7 +141,7 @@ classdef ds_nn < handle
             end
                
             for i = 1:obj.options.epochs
-                fprintf('Epoch %i ',i);
+                fprintf('Epoch %i\t',i);
                 obj = obj.trainer( obj );
                 fprintf(' RMSE: %f\n',obj.logs.rmse(end) );
             end

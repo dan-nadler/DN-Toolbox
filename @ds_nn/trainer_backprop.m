@@ -51,7 +51,7 @@ function obj = trainer_backprop( obj )
     obj.logs.W{end+1,1} = obj.W;
     
     if obj.options.visual == true
-        plot([obj.Y(1,:)',obj.predict(obj.Y(1,:))']);
+        plot([obj.Y(1,:)',obj.predict(obj.X(1,:))']);
         learnMovie(i) = getframe;
         pause(0.0001);
     end

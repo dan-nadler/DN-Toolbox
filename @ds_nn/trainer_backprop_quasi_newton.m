@@ -30,10 +30,10 @@ function obj = trainer_backprop_quasi_newton( obj )
         % output layer error
         errorOut{numLayers,1} = dloss( A{numLayers+1}, obj.Y(s:e,:) );
         hessian{numLayers,1} = ( ...
-                                    obj.F{numLayers,2}( input{numLayers+1} + obj.options.hessianRate * errorOut{numLayers,1} ) ...
+                                    obj.F{numLayers,2}( input{numLayers+1} + obj.options.hessianStep * errorOut{numLayers,1} ) ...
                                   - obj.F{numLayers,2}( input{numLayers+1} ) ...
                                 )...
-                                / obj.options.hessianRate;
+                                / obj.options.hessianStep;
         
         for i = numLayers:-1:2
             % hidden layer error
@@ -64,7 +64,7 @@ function obj = trainer_backprop_quasi_newton( obj )
     obj.logs.hessian{end+1,1} = hessian;
 
     if obj.options.visual == true
-        plot([obj.Y(1,:)',obj.predict(obj.Y(1,:))']);
+        plot([obj.Y(1,:)',obj.predict(obj.X(1,:))']);
         learnMovie(i) = getframe;
         pause(0.0001);
     end
