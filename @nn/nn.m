@@ -43,7 +43,7 @@ classdef ds_nn < handle
             obj.logs.rmse = [];
             obj.logs.W = {};
             obj.logs.hessian = {};
-%             obj.logs.learnMovie = struct;
+            % obj.logs.learnMovie = struct;
         
             % store supported layers
             obj.layers.sigm.fxn = @(x) 1 ./ (1 + exp(-x) ); %sigmoid            
@@ -76,7 +76,7 @@ classdef ds_nn < handle
             obj.Xval = [];
             obj.Yval = [];
             
-            obj.trainer = 'newton'; % backprop
+            obj.trainer = 'newton'; % default trainer is quasi-newtorn
         end
         
         function obj = set.N( obj, N )

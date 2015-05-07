@@ -1,13 +1,13 @@
 clear all;
 
-n = ds_nn([100,50,20,11],{'sigm','tanh','tanh','tanh'});
+n = ds_nn([1000,50,200,11],{'sigm','tanh','tanh','tanh'});
 n.trainer = 'newton';
 n.options.batchSize = 100;
 n.options.learningRate = 0.01;
 n.options.hessianStep = .00001;
 n.options.epochs = 10;
 n.options.visual = true;
-n.options.dropoutProb = 0;
+n.options.dropoutProb = 0.1;
 
 x = [-10:1:10];
 N = numel(x);
