@@ -1,4 +1,4 @@
-classdef ds_nn < handle
+classdef nn < handle
 % Neural Net class
 % author: Dan Nadler
 
@@ -24,9 +24,8 @@ classdef ds_nn < handle
         
     end
     
-    
     methods
-        function obj = ds_nn( layer_size, layer_type )
+        function obj = nn( layer_size, layer_type )
         % ds_nn( layer_sizes, layer_types )
         % layer_sizes = cell array of layer sizes
         % layer_types = cell array of layer types
@@ -34,10 +33,11 @@ classdef ds_nn < handle
             % set default options
             obj.options.batchSize = 100;
             obj.options.learningRate = .15;
-            obj.options.hessianStep = .3;
+            obj.options.hessianStep = .0001;
             obj.options.epochs = 30;
             obj.options.visual = false;
             obj.options.dropoutProb = 0;
+            obj.options.verbose = false;
             % obj.options.descent = 'Newton'; % 'SGD', 'SFN', 'Newton'
             
             obj.logs.rmse = [];
@@ -53,7 +53,7 @@ classdef ds_nn < handle
             obj.layers.tanh.grad = @(x) sech(x).^2;
             
             obj.layers.smax.fxn = @(x) exp(x) ./ repmat(sum(exp(x),2),1,size(x,2)); %softmax
-            obj.layers.smax.grad = @(x) nan;
+            obj.layers.smax.grad = @(x) zeros(size(x));
             
             obj.layers.relu.fxn = @(x) max( x, 0 ); %rectified linear
             obj.layers.relu.grad = @(x) x > 0;
@@ -157,7 +157,9 @@ classdef ds_nn < handle
                 
                 % report errors
                 % error of last batch
-                fprintf( 'RMSE: %f\t', obj.calcRMSE( obj.X, obj.Y ) );
+                if obj.options.verbose
+                    fprintf( 'RMSE: %f\t', obj.calcRMSE( obj.X, obj.Y ) );
+                end
                 
                 if ~isempty( obj.Yval )
                     % error of validation sample
@@ -196,6 +198,11 @@ classdef ds_nn < handle
                 activation = obj.F{i,1}( activation * obj.W{i} + repmat( obj.B{i}, size(input,1), 1 ));
             end
             
+        end
+        
+        function activation = reconstructFxn( obj, output )
+        % construct function to activate input layer, given hidden
+        
         end
         
     end
