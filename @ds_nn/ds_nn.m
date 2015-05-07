@@ -109,6 +109,8 @@ classdef ds_nn < handle
         function obj = set.trainer( obj, trainer )
         % set trainer
             switch trainer
+                case 'sgd'
+                    obj.trainer = @trainer_backprop;
                 case 'backprop'
                     obj.trainer = @trainer_backprop;
                 case 'newton'
