@@ -46,7 +46,7 @@ function obj = trainer_backprop( obj )
             obj.B{i} = obj.B{i} - obj.options.learningRate * ( sum( errorOut{i}, 1 ) / actBatchSize );
         end
         
-        obj.logs.rmse(end+1,1) = mean(( sum( errorOut{numLayers,1}, 1 ) ./ actBatchSize ).^2);
+%         obj.logs.rmse(end+1,1) = mean(( sum( errorOut{numLayers,1}, 1 ) ./ actBatchSize ).^2);
     end
     obj.logs.W{end+1,1} = obj.W;
     

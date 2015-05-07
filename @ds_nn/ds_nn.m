@@ -5,6 +5,8 @@ classdef ds_nn < handle
     properties ( Access = public )
         X % input data
         Y % output (target) data
+        Xval % input validation sample
+        Yval % output validation sample
         N % layer size
         F % layer type / activation function
         dF % layer gradient
@@ -15,6 +17,7 @@ classdef ds_nn < handle
         regs % all supported regularizers
         options % various options (batch size, learning rate, etc.)
         logs % stores snapshots of model performance during training
+        dloss = @(yh,y) (yh-y) % loss function
     end
     
     properties ( Hidden = true, Access = public )
@@ -34,6 +37,7 @@ classdef ds_nn < handle
             obj.options.hessianStep = .3;
             obj.options.epochs = 30;
             obj.options.visual = false;
+            obj.options.dropoutProb = 0;
             % obj.options.descent = 'Newton'; % 'SGD', 'SFN', 'Newton'
             
             obj.logs.rmse = [];
@@ -67,7 +71,10 @@ classdef ds_nn < handle
             
             % set data
             obj.X = []; 
-            obj.Y = []; 
+            obj.Y = [];
+            
+            obj.Xval = [];
+            obj.Yval = [];
             
             obj.trainer = 'newton'; % backprop
         end
@@ -141,9 +148,23 @@ classdef ds_nn < handle
             end
                
             for i = 1:obj.options.epochs
-                fprintf('Epoch %i\t',i);
+                
+                % list current epoch
+                fprintf( 'Epoch %i:\t\t', i );
+                
+                % run training algorithm for 1 epoch
                 obj = obj.trainer( obj );
-                fprintf(' RMSE: %f\n',obj.logs.rmse(end) );
+                
+                % report errors
+                % error of last batch
+                fprintf( 'RMSE: %f\t', obj.calcRMSE( obj.X, obj.Y ) );
+                
+                if ~isempty( obj.Yval )
+                    % error of validation sample
+                    fprintf( 'Validation RMSE: %f', obj.calcRMSE( obj.Xval, obj.Yval) ); 
+                end
+                
+                fprintf('\n');
             end
             
         end
@@ -152,6 +173,13 @@ classdef ds_nn < handle
         % given inputs, predict output
         % in the future, this will depend on the type of net created
             output = obj.forwardPropFxn( input );
+        end
+        
+        function output = calcRMSE( obj, input, target )
+        % run the validation sample through the model and return the average RMSE
+            Yh_val = obj.predict( input );
+            output = sqrt( mean((sum( obj.dloss( Yh_val, target ), 1 ) / size(target,1) ) .^2) );
+            
         end
         
     end
@@ -163,9 +191,9 @@ classdef ds_nn < handle
         function activation = forwardPropFxn( obj, input )
         % construct forward propagate function
             
-            activation = obj.F{1,1}( input * obj.W{1} + obj.B{1} );
+            activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
             for i = 2:size( obj.F, 1 )
-                activation = obj.F{i,1}( activation * obj.W{i} + obj.B{i} );
+                activation = obj.F{i,1}( activation * obj.W{i} + repmat( obj.B{i}, size(input,1), 1 ));
             end
             
         end
@@ -175,4 +203,5 @@ classdef ds_nn < handle
     methods ( Static )
         
     end
+    
 end
