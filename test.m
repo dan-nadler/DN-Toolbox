@@ -1,12 +1,12 @@
 clear all;
 
-n = nn([1000,50,200,11],{'sigm','tanh','tanh','tanh'});
+n = nn([1000,50,200,11],{'sigm','tanh','tanh','smax'});
 n.trainer = 'newton';
 n.options.batchSize = 100;
 n.options.learningRate = 0.01;
 n.options.hessianStep = .00001;
 n.options.epochs = 1;
-n.options.visual = true;
+n.options.visual = false;
 n.options.dropoutProb = 0;
 
 x = [-10:1:10];
@@ -39,12 +39,13 @@ clear gnd fea label;
 
 %% MNIST test
 
-n = nn( [1000, 100, 10], {'sigm','sigm','smax'} );
+n = nn( [1000, 100, 10], {'sigm','tanh','smax'} );
 n.trainer = 'newton';
-n.options.epochs = 1;
+n.options.epochs = 5;
 n.options.visual = false;
 n.options.learningRate = 0.01;
 n.options.dropoutProb = 0.5;
+n.options.batchSize = 1000;
 
 n.X = trainX;
 n.Y = trainY;

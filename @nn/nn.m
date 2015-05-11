@@ -1,6 +1,19 @@
 classdef nn < handle
 % Neural Net class
 % author: Dan Nadler
+%
+% Functions
+% 
+% nn( layer_size <cell array>, layer_type <cell array> )  
+%
+% train()
+%
+% output <vector> = propOutputFromInput( input <vector> )
+%
+% input <vector> = propInputFromOutput( ouput <vetor> )
+%
+% RMSE <float> = calcRMSE( input <vector>, output <vector> )
+%
 
     properties ( Access = public )
         X % input data
@@ -17,7 +30,7 @@ classdef nn < handle
         regs % all supported regularizers
         options % various options (batch size, learning rate, etc.)
         logs % stores snapshots of model performance during training
-        dloss = @(yh,y) (yh-y) % loss function
+        loss % loss function
     end
     
     properties ( Hidden = true, Access = public )
@@ -32,13 +45,14 @@ classdef nn < handle
             
             % set default options
             obj.options.batchSize = 100;
-            obj.options.learningRate = .15;
+            obj.options.learningRate = .05;
             obj.options.hessianStep = .0001;
             obj.options.epochs = 30;
-            obj.options.visual = false;
             obj.options.dropoutProb = 0;
+            obj.options.visual = false;
             obj.options.verbose = false;
-            % obj.options.descent = 'Newton'; % 'SGD', 'SFN', 'Newton'
+            obj.options.iniParams.layer_size = layer_size;
+            obj.options.iniParams.layer_type = layer_type;
             
             obj.logs.rmse = [];
             obj.logs.W = {};
@@ -68,6 +82,9 @@ classdef nn < handle
                 'Layer size cell array is not the same size as layer functions array ( numel(N) ~= numel(F) )');
             obj.N = layer_size;
             obj.F = layer_type;
+            
+            % set loss function
+            obj.loss = '';
             
             % set data
             obj.X = []; 
@@ -127,6 +144,19 @@ classdef nn < handle
             end
         end
         
+        function obj = set.loss( obj, lossFxn )
+            switch lossFxn
+                case 'squared'
+                    obj.loss = @(yh,y) ((yh-y).^2)/-2;
+                otherwise
+                    if strcmp(obj.options.iniParams.layer_type{end}, 'smax')
+                        obj.loss = @(yh,y) ((yh-y).^2)/-2;
+                    else
+                        obj.loss = @(yh,y) (yh-y);
+                    end
+            end
+        end
+        
         function obj = train( obj )
             
             if isempty( obj.W )
@@ -171,16 +201,22 @@ classdef nn < handle
             
         end
         
-        function output = predict( obj, input )
+        function output = propOutputFromInput( obj, input )
         % given inputs, predict output
         % in the future, this will depend on the type of net created
             output = obj.forwardPropFxn( input );
         end
         
+        function activation = propInputFromOutput( obj, output )
+        % construct function to activate input layer, given output
+            temp = obj.propInputFromOutputFxn( output );
+            activation = temp{1};
+        end
+        
         function output = calcRMSE( obj, input, target )
         % run the validation sample through the model and return the average RMSE
-            Yh_val = obj.predict( input );
-            output = sqrt( mean((sum( obj.dloss( Yh_val, target ), 1 ) / size(target,1) ) .^2) );
+            Yh_val = obj.propOutputFromInput( input );
+            output = sqrt( mean((sum( obj.loss( Yh_val, target ), 1 ) / size(target,1) ) .^2) );
             
         end
         
@@ -193,16 +229,23 @@ classdef nn < handle
         function activation = forwardPropFxn( obj, input )
         % construct forward propagate function
             
-            activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
-            for i = 2:size( obj.F, 1 )
+            activation = input;
+%             activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
+            for i = 1:size( obj.F, 1 )
                 activation = obj.F{i,1}( activation * obj.W{i} + repmat( obj.B{i}, size(input,1), 1 ));
             end
             
         end
         
-        function activation = reconstructFxn( obj, output )
-        % construct function to activate input layer, given hidden
-        
+        function activation = propInputFromOutputFxn( obj, output )
+        % construct function to activate input layer, given output
+            activation{numel(obj.W)+1,1} = output;
+            b = cell( numel( obj.B ) + 1, 1 );
+            b(2:end) = obj.B;
+            b(1) = { zeros( 1, size( obj.X,2 ) ) };
+            for i = numel(obj.W):-1:1
+                activation{i,1} = activation{i+1} * obj.W{i}' + repmat( b{i}, size(output,1), 1 );
+            end
         end
         
     end

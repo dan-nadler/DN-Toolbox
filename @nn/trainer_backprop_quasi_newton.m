@@ -1,7 +1,7 @@
 function obj = trainer_backprop_quasi_newton( obj )   
     
     numLayers = size(obj.F,1);
-    dloss = obj.dloss;
+    loss = obj.loss;
     reg = obj.regs.active;
     batchSize = obj.options.batchSize;
     dropout = @(mat) rand(size(mat)) > obj.options.dropoutProb;
@@ -31,7 +31,7 @@ function obj = trainer_backprop_quasi_newton( obj )
 
         % backprop
         % output layer error
-        errorOut{numLayers,1} = dloss( A{numLayers+1}, obj.Y(s:e,:) ) .* drop{numLayers+1};
+        errorOut{numLayers,1} = loss( A{numLayers+1}, obj.Y(s:e,:) ) .* drop{numLayers+1};
         hessian{numLayers,1} = ( ...
                                     obj.F{numLayers,2}( input{numLayers+1} + obj.options.hessianStep * errorOut{numLayers,1} ) ...
                                   - obj.F{numLayers,2}( input{numLayers+1} ) ...
@@ -60,7 +60,7 @@ function obj = trainer_backprop_quasi_newton( obj )
             obj.B{i} = obj.B{i} - obj.options.learningRate * ( sum( errorOut{i}, 1 ) / actBatchSize );
         end
 
-%         obj.logs.rmse(end+1,1) = obj.calcRMSE( obj.X, obj.Y );
+        obj.logs.rmse(end+1,1) = obj.calcRMSE( input{1}, obj.Y(s:e,:) );
         
     end
     obj.logs.W{end+1,1} = obj.W;
