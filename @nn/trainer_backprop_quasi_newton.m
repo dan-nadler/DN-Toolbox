@@ -60,24 +60,17 @@ function obj = trainer_backprop_quasi_newton( obj )
             obj.B{i} = obj.B{i} - obj.options.learningRate * ( sum( errorOut{i}, 1 ) / actBatchSize );
         end
 
-        obj.logs.rmse(end+1,1) = obj.calcRMSE( input{1}, obj.Y(s:e,:) );
+        obj.logs.rmse_batch(end+1,1) = obj.calcRMSE( A{numLayers+1}, obj.Y(s:e,:) );
         
     end
     obj.logs.W{end+1,1} = obj.W;
+    obj.logs.B{end+1,1} = obj.B;
     obj.logs.hessian{end+1,1} = hessian;
 
     if obj.options.visual == true
-        plot([obj.Y(1,:)',obj.predict(obj.X(1,:))']);
+        plot([obj.Y(1,:)',obj.propOutputFromInput(obj.X(1,:))']);
         learnMovie(i) = getframe;
         pause(0.0001);
     end
     
-end
-
-function output = RvX( w, RvY, v, y )
-    output = sum( ( w * RvY ) + ( v * y ) );
-end
-
-function output = RvY( fxn, x, RvX )
-    output = fxn(x) * RvX;
 end

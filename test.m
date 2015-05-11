@@ -1,13 +1,14 @@
 clear all;
 
-n = nn([1000,50,200,11],{'sigm','tanh','tanh','smax'});
+n = nn([100,50,20,11],{'sigm','tanh','tanh','sigm'});
 n.trainer = 'newton';
-n.options.batchSize = 100;
-n.options.learningRate = 0.01;
+n.options.batchSize = 10;
+n.options.learningRate = 0.05;
 n.options.hessianStep = .00001;
 n.options.epochs = 1;
-n.options.visual = false;
+n.options.visual = true;
 n.options.dropoutProb = 0;
+n.options.verbose = true;
 
 x = [-10:1:10];
 N = numel(x);
