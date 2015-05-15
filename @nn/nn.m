@@ -52,6 +52,7 @@ classdef nn < handle
             obj.options.verbose = false;
             obj.options.corr = false;
             obj.options.revertToBest = true;
+            obj.options.gpu = false;
             
             obj.options.iniParams.layer_size = layer_size;
             obj.options.iniParams.layer_type = layer_type;
@@ -73,11 +74,17 @@ classdef nn < handle
             obj.layers.tanh.fxn = @(x) tanh(x); %hyperbolic tangent
             obj.layers.tanh.grad = @(x) sech(x).^2;
             
+            obj.layers.hardtanh.fxn = @(x) max(-1,min(1,tanh(x))); % hard tanh
+            obj.layers.hardtanh.grad = @(x) ( x>-1 & x<1 ) .* ( sech(x) .^ 2 );
+            
             obj.layers.smax.fxn = @(x) exp(x) ./ repmat(sum(exp(x),2),1,size(x,2)); %softmax
-            obj.layers.smax.grad = @(x) zeros(size(x));
+            obj.layers.smax.grad = @(x) zeros(size(x)); % this is a problem... need to figure out gradient if smax is ever going to be a hidden layer
             
             obj.layers.relu.fxn = @(x) max( x, 0 ); %rectified linear
             obj.layers.relu.grad = @(x) x > 0;
+            
+            obj.layers.avrect.fxn = @(x) abs(x); % absolute value
+            obj.layers.avrect.grad = @(x) sign(x);
             
             % store supported regularizers
             obj.regs.fxn.l2 = @(x) sqrt(sum(x.^2,2))*2;
@@ -86,7 +93,7 @@ classdef nn < handle
             
             % set model size and type
             assert( numel(layer_size) == numel(layer_type),...
-                'Layer size cell array is not the same size as layer functions array ( numel(N) ~= numel(F) )');
+                'Layer size cell array is not the same size as layer functions cell array ( numel(N) ~= numel(F) )');
             obj.N = layer_size;
             obj.F = layer_type;
             
@@ -141,11 +148,15 @@ classdef nn < handle
         % set trainer
             switch trainer
                 case 'sgd'
-                    obj.trainer = @trainer_backprop;
+                    obj.trainer = @trainer_backprop_quasi_newton;
                 case 'backprop'
-                    obj.trainer = @trainer_backprop;
+                    obj.trainer = @trainer_backprop_quasi_newton;
                 case 'newton'
                     obj.trainer = @trainer_backprop_quasi_newton;
+                case 'newtonGPU'
+                    obj.trainer = @trainer_backprop_quasi_newton_gpu;
+                case 'svm'
+                    obj.trainer = @trainer_tied_weights;
                 otherwise
                     error('PAIL:Set:Trainer',['Invalid trainer requested: ' trainer]);
             end

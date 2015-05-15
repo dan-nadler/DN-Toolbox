@@ -1,4 +1,4 @@
-function obj = trainer_backprop_quasi_newton( obj )   
+function obj = trainer_tied_weights( obj )   
     
     numLayers = size(obj.F,1);
     loss = obj.loss;
@@ -6,8 +6,14 @@ function obj = trainer_backprop_quasi_newton( obj )
     batchSize = obj.options.batchSize;
     dropout = @(mat) rand(size(mat)) > obj.options.dropoutProb;
     
-    b = 0;
-    while batchSize*b < size(obj.X,1)-1
+    b = 0;    
+    
+    while batchSize*b < size(obj.X,1)
+        
+        % tie weights
+        for i = 1:numel(obj.W)/2
+            obj.W{i} = obj.W{end-i+1};
+        end
         
         b = b + 1;
         e = min( batchSize * b, size(obj.X,1) );

@@ -1,5 +1,6 @@
-function obj = trainer_backprop_quasi_newton( obj )   
-    
+function obj = trainer_backprop_quasi_newton_gpu( obj )   
+
+
     numLayers = size(obj.F,1);
     loss = obj.loss;
     reg = obj.regs.active;
@@ -7,8 +8,8 @@ function obj = trainer_backprop_quasi_newton( obj )
     dropout = @(mat) rand(size(mat)) > obj.options.dropoutProb;
     
     b = 0;
-    while batchSize*b < size(obj.X,1)-1
-        
+    while batchSize*b < size(obj.X,1)
+
         b = b + 1;
         e = min( batchSize * b, size(obj.X,1) );
         s = batchSize * b - batchSize + 1;
@@ -16,8 +17,8 @@ function obj = trainer_backprop_quasi_newton( obj )
 
         % forward prop
         % input layer activation
-        drop{1,1} = dropout(obj.X(s:e,:));
-        A{1,1} = obj.X(s:e,:) .* drop{1,1}; % input layer
+        drop{1,1} = gpuArray( dropout(obj.X(s:e,:)) );
+        A{1,1} = gpuArray( obj.X(s:e,:) ) .* drop{1,1}; % input layer
         input{1,1} = A{1,1};
         
         for i = 1:numLayers
@@ -63,6 +64,12 @@ function obj = trainer_backprop_quasi_newton( obj )
         obj.logs.rmse_batch(end+1,1) = obj.calcRMSE( A{numLayers+1}, obj.Y(s:e,:) );
         
     end
+    
+    for i = 1:numel(obj.W)
+        obj.W{i} = gather( obj.W{i} );
+        obj.B{i} = gather( obj.B{i} );
+    end
+    
     obj.logs.W{end+1,1} = obj.W;
     obj.logs.B{end+1,1} = obj.B;
     obj.logs.hessian{end+1,1} = hessian;
@@ -72,5 +79,4 @@ function obj = trainer_backprop_quasi_newton( obj )
         learnMovie(i) = getframe;
         pause(0.0001);
     end
-    
 end

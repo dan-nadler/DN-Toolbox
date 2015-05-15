@@ -1,6 +1,6 @@
 clear all;
 
-n = nn([100,50,20,11],{'sigm','tanh','tanh','sigm'});
+n = nn([11,20,11],{'hardtanh','hardtanh','hardtanh'});
 n.trainer = 'newton';
 n.options.batchSize = 10;
 n.options.learningRate = 0.05;
@@ -55,3 +55,5 @@ n.Xval = testX;
 n.Yval = testY;
 
 n.train;
+
+%% CNN test
