@@ -43,16 +43,18 @@ classdef nn < handle
         % layer_types = cell array of layer types
             
             % set default options
-            obj.options.batchSize = 100;
-            obj.options.learningRate = .05;
-            obj.options.hessianStep = .0001;
-            obj.options.epochs = 30;
-            obj.options.dropoutProb = 0;
-            obj.options.visual = false;
-            obj.options.verbose = false;
-            obj.options.corr = false;
-            obj.options.revertToBest = true;
-            obj.options.gpu = false;
+            obj.options.batchSize = 100; 
+            obj.options.learningRate = .05; 
+            obj.options.hessianStep = .0001; % step size used to compute hessian
+            obj.options.epochs = 30; 
+            obj.options.dropoutProb = 0; 
+            obj.options.visual = false; % visualization of training. not tested.
+            obj.options.verbose = true; % print training progress
+            obj.options.corr = false; % compute correlation after each epoch
+            obj.options.revertToBest = true; % revert parameters to lowest-error epoch after training
+            obj.options.gpu = false; % use GPU for training
+            obj.options.KLbeta = 0; % beta for Kullback-Leibler penalty
+            obj.options.log = true; % log data throughout training - turn off to conserve memory. Required for revertToBest
             
             obj.options.iniParams.layer_size = layer_size;
             obj.options.iniParams.layer_type = layer_type;
@@ -86,6 +88,14 @@ classdef nn < handle
             obj.layers.avrect.fxn = @(x) abs(x); % absolute value
             obj.layers.avrect.grad = @(x) sign(x);
             
+            obj.layers.conv.kfxn = @(x) mean(x);
+            obj.layers.conv.fxn =  @(x) 1 ./ (1 + exp(-x) ); %sigmoid
+            obj.layers.conv.grad = @(x) ( 1 ./ (1 + exp(-x) ) ) .* ( 1 - (1 ./ (1 + exp(-x) )) );
+            
+            obj.layers.meanpool.fxn = @(x) mean(x);
+            
+            obj.layers.maxpool.fxn = @(x) reshape( x(:) == max(x(:)), size(x) );
+            
             % store supported regularizers
             obj.regs.fxn.l2 = @(x) sqrt(sum(x.^2,2))*2;
             obj.regs.fxn.none = @(x) 0;
@@ -107,7 +117,18 @@ classdef nn < handle
             obj.Xval = [];
             obj.Yval = [];
             
-            obj.trainer = 'newton'; % default trainer is quasi-newtorn
+            obj.trainer = 'newton'; % default trainer is quasi-newton backprop
+        end
+        
+        function obj = set.options( obj, opts )
+            obj.options = opts;
+            try
+                if obj.options.log == 0 && obj.options.revertToBest == 1
+                    warning('Log is required for revertToBest. revertToBest has been disabled.');
+                    obj.options.revertToBest = 0;
+                end
+            catch % it's okay if there is an error here.
+            end
         end
         
         function obj = set.N( obj, N )
@@ -121,7 +142,7 @@ classdef nn < handle
                     obj.N = Nc;
                 end
             else
-                error('PAIL:Set:N','Could not read N. Type should be Array or Cell Array');
+                error('DN:Set:N','Could not read N. Type should be Array or Cell Array');
             end
         end
         
@@ -129,17 +150,32 @@ classdef nn < handle
         % set layer types by matching provided strings with available types in obj.layers struct
             for i = 1:numel(Fxns)
                 if iscell(Fxns)
-                    try
-                        obj.F{i,1} = obj.layers.(Fxns{i}).fxn;
-                        obj.F{i,2} = obj.layers.(Fxns{i}).grad;
-                    catch ME
-                        msg = [ 'Did not recognize layer type: ' Fxns{i} ];
-                        causeException = MException( 'dsnn:setF', msg );
-                        ME = addCause( ME, causeException );
-                        throw(ME);
-                    end                        
+                    
+                    switch Fxns{i}
+                        case 'conv'
+                            obj.F{i,1} = obj.layers.conv.fxn;
+                            obj.F{i,2} = obj.layers.conv.grad;
+                            obj.F{i,3} = obj.layers.conv.kfxn;
+                            
+                        case 'meanpool'
+                            obj.F{i,1} = obj.layers.meanpool.fxn;
+                            
+                        case 'maxpool'
+                            obj.F{i,1} = obj.layers.maxpool.fxn;
+                            
+                        otherwise
+                            try
+                                obj.F{i,1} = obj.layers.(Fxns{i}).fxn;
+                                obj.F{i,2} = obj.layers.(Fxns{i}).grad;
+                            catch ME
+                                msg = [ 'Did not recognize layer type: ' Fxns{i} ];
+                                causeException = MException( 'dsnn:setF', msg );
+                                ME = addCause( ME, causeException );
+                                throw(ME);
+                            end
+                    end
                 else
-                    error('PAIL:Set:F','Could not read F. Type should be Cell Array');
+                    error('DN:Set:F','Could not read F. Type should be Cell Array');
                 end
             end
         end
@@ -157,8 +193,10 @@ classdef nn < handle
                     obj.trainer = @trainer_backprop_quasi_newton_gpu;
                 case 'svm'
                     obj.trainer = @trainer_tied_weights;
+                case 'cnn'
+                    obj.trainer = @trainer_conv_net;
                 otherwise
-                    error('PAIL:Set:Trainer',['Invalid trainer requested: ' trainer]);
+                    error('DN:Set:Trainer',['Invalid trainer requested: ' trainer]);
             end
         end
         
@@ -298,7 +336,7 @@ classdef nn < handle
         % construct forward propagate function
             
             activation = input;
-%             activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
+            % activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
             for i = 1:size( obj.F, 1 )
                 activation = obj.F{i,1}( activation * obj.W{i} + repmat( obj.B{i}, size(input,1), 1 ));
             end
@@ -317,14 +355,18 @@ classdef nn < handle
         end
         
         function randomInit( obj )
-        %random weights and bias matrix initialization
+        % random weights and bias matrix initialization
+        
             numLayers = size(obj.F,1);
+            
             obj.W{1,1} = randn(size(obj.X,2),obj.N{1})/3; %input to hidden weights matrix
             obj.B{1,1} = randn(1,obj.N{1})/3; %1st hidden layer bias
+            
             for i = 2:numLayers
                 obj.W{i,1} = (rand(size(obj.W{i-1},2),obj.N{i})-.5)*2; %weights matrix
                 obj.B{i,1} = (randn(1,obj.N{i})-.5)*2; %bias
             end
+            
         end
         
     end
