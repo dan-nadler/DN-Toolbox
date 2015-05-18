@@ -29,7 +29,7 @@ classdef nn < handle
         regs % all supported regularizers
         options % various options (batch size, learning rate, etc.)
         logs % stores snapshots of model performance during training
-        loss % loss function
+        loss % loss function'
     end
     
     properties ( Hidden = true, Access = public )
@@ -88,13 +88,8 @@ classdef nn < handle
             obj.layers.avrect.fxn = @(x) abs(x); % absolute value
             obj.layers.avrect.grad = @(x) sign(x);
             
-            obj.layers.conv.kfxn = @(x) mean(x);
-            obj.layers.conv.fxn =  @(x) 1 ./ (1 + exp(-x) ); %sigmoid
-            obj.layers.conv.grad = @(x) ( 1 ./ (1 + exp(-x) ) ) .* ( 1 - (1 ./ (1 + exp(-x) )) );
-            
-            obj.layers.meanpool.fxn = @(x) mean(x);
-            
-            obj.layers.maxpool.fxn = @(x) reshape( x(:) == max(x(:)), size(x) );
+            obj.layers.conv_mean.fxn = @(x) mean(x);
+            obj.layers.pool_mean.fxn = @(x) mean(x);
             
             % store supported regularizers
             obj.regs.fxn.l2 = @(x) sqrt(sum(x.^2,2))*2;
@@ -118,6 +113,7 @@ classdef nn < handle
             obj.Yval = [];
             
             obj.trainer = 'newton'; % default trainer is quasi-newton backprop
+            
         end
         
         function obj = set.options( obj, opts )
@@ -150,29 +146,14 @@ classdef nn < handle
         % set layer types by matching provided strings with available types in obj.layers struct
             for i = 1:numel(Fxns)
                 if iscell(Fxns)
-                    
-                    switch Fxns{i}
-                        case 'conv'
-                            obj.F{i,1} = obj.layers.conv.fxn;
-                            obj.F{i,2} = obj.layers.conv.grad;
-                            obj.F{i,3} = obj.layers.conv.kfxn;
-                            
-                        case 'meanpool'
-                            obj.F{i,1} = obj.layers.meanpool.fxn;
-                            
-                        case 'maxpool'
-                            obj.F{i,1} = obj.layers.maxpool.fxn;
-                            
-                        otherwise
-                            try
-                                obj.F{i,1} = obj.layers.(Fxns{i}).fxn;
-                                obj.F{i,2} = obj.layers.(Fxns{i}).grad;
-                            catch ME
-                                msg = [ 'Did not recognize layer type: ' Fxns{i} ];
-                                causeException = MException( 'dsnn:setF', msg );
-                                ME = addCause( ME, causeException );
-                                throw(ME);
-                            end
+                    try
+                        obj.F{i,1} = obj.layers.(Fxns{i}).fxn;
+                        obj.F{i,2} = obj.layers.(Fxns{i}).grad;
+                    catch ME
+                        msg = [ 'Did not recognize layer type: ' Fxns{i} ];
+                        causeException = MException( 'dsnn:setF', msg );
+                        ME = addCause( ME, causeException );
+                        throw(ME);
                     end
                 else
                     error('DN:Set:F','Could not read F. Type should be Cell Array');
@@ -329,8 +310,6 @@ classdef nn < handle
     end
     
     methods ( Access = protected )
-       
-        obj = trainer_backprop( obj );
         
         function activation = propOutputFromInputFxn( obj, input )
         % construct forward propagate function
@@ -354,17 +333,23 @@ classdef nn < handle
             end
         end
         
-        function randomInit( obj )
+        function randomInit( obj, varargin )
         % random weights and bias matrix initialization
         
+            if nargin == 1
+                inSize = varargin{1};
+            else
+                inSize = size(obj.X,2);
+            end
+            
             numLayers = size(obj.F,1);
             
-            obj.W{1,1} = randn(size(obj.X,2),obj.N{1})/3; %input to hidden weights matrix
-            obj.B{1,1} = randn(1,obj.N{1})/3; %1st hidden layer bias
-            
+            obj.W{1,1} = randn(inSize,obj.N{1}); %input to hidden weights matrix
+            obj.B{1,1} = randn(1,obj.N{1}); %1st hidden layer bias
+
             for i = 2:numLayers
-                obj.W{i,1} = (rand(size(obj.W{i-1},2),obj.N{i})-.5)*2; %weights matrix
-                obj.B{i,1} = (randn(1,obj.N{i})-.5)*2; %bias
+                obj.W{i,1} = randn(size(obj.W{i-1},2),obj.N{i}); %weights matrix
+                obj.B{i,1} = randn(1,obj.N{i}); %bias
             end
             
         end
