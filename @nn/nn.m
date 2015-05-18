@@ -38,7 +38,7 @@ classdef nn < handle
     
     methods
         function obj = nn( layer_size, layer_type )
-        % ds_nn( layer_sizes, layer_types )
+        % nn( layer_sizes, layer_types )
         % layer_sizes = cell array of layer sizes
         % layer_types = cell array of layer types
             

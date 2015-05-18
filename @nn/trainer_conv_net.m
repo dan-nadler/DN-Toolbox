@@ -26,7 +26,7 @@ function obj = trainer_conv_net( obj )
         for ic = 1:numConvLayers
             % convolve
             % construct 3D matrix of convolution ops
-            conv_mat = obj.Wc{1} .* ones(1, obj.convLayers.kSize, obj.convLayer.nFeature) / obj.convLayers.kSize;
+            conv_mat = obj.Wc{ic} .* ones(1, obj.convLayers.kSize, obj.convLayer.nFeature) / obj.convLayers.kSize;
             
             % for each feature map
             for ifea = 1:size(conv_vec,3)
@@ -38,6 +38,14 @@ function obj = trainer_conv_net( obj )
                     conv_output(ib,:,ifea) = output(1:end-1);
                 end
             end
+            
+            % activation function
+            Ac{ic+1,1} = obj.Fc{ic}( conv_output );
+            
+            % pool
+            pSize = obj.convLayers{ic}.pSize;
+            input{ic+1,1} = mean( reshape( Ac{ic+1}, size( Ac{ic+1},2 ) / pSize, pSize, size( Ac{ic+1}, 3 ) ) );
+            
         end
         
         for i = 1:numLayers
