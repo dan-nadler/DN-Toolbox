@@ -29,23 +29,27 @@ classdef cnn < nn & handle
             
         end
         
+        function testInit( obj )
+            randomInit(obj);
+        end
+        
     end
     
     methods ( Static )
-        output = convolve( input, weights, kSize, pSize ); % convolve( input, weights, kSize, pSize )
+        output = convolve( input, weights, kSize, pSize ); 
+        % convolve( input, weights, kSize, pSize )
     end
     
     methods ( Access = protected )
         function randomInit( obj )
             
-            inputSize = size( obj.X, 2 );
-            obj.Wc{1} = randn( 1, obj.convLayers{1}.kSize, obj.convLayers{1}.nFeature );
+            nChannels = size( obj.X, 3 );
             
-            for i = 2:numel( obj.convLayers )
-                obj.Wc{i} = randn( 1, obj.convLayers{i}.kSize, obj.convLayers{i}.nFeature );
+            for i = 1:numel( obj.convLayers )
+                obj.Wc{i} = randn( nChannels, obj.convLayers{i}.kSize );
             end
             
-            randomInit@nn( obj, numel(obj.Wc{end}) );
+            randomInit@nn( obj, obj.convLayers{end}.pSize * size(obj.X,3) );
             
         end
     end

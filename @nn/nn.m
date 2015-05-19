@@ -336,7 +336,7 @@ classdef nn < handle
         function randomInit( obj, varargin )
         % random weights and bias matrix initialization
         
-            if nargin == 1
+            if nargin == 2
                 inSize = varargin{1};
             else
                 inSize = size(obj.X,2);

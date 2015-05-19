@@ -3,7 +3,7 @@ function output = convolve( input, weights, kSize, pSize )
 % performs mean convolution -> sigmoid activation -> mean pooling
 
     sigm =  @(x) 1 ./ (1 + exp(-x) ); %sigmoid
-
+    
     % assume input size: observations x time-series points x channels
     obs = size( input, 1 ); % this is essentially the batch size
     pts = size( input, 2 ); % the number of data-points for each channel
@@ -15,6 +15,7 @@ function output = convolve( input, weights, kSize, pSize )
     for ic = 1:chs
         
         conv_vec = weights(ic,:); % weights is matrix of size ( maps x kSize )
+        C_temp = nan( obs, pts-kSize+1 );
 
         for io = 1:obs
             
@@ -24,9 +25,10 @@ function output = convolve( input, weights, kSize, pSize )
             
         end
         
-        % non-linearity
+        % non-linearity and its gradient
         A = sigm( C_temp ); % vector 1 x pts - kSize + 1
-
+        dA = A .* (1 - A); % should save this for backprop
+        
         % mean pooling
         P = mean( reshape( A', size(A,2)/pSize, pSize, obs ) ); % vector 1 x pSize
 
