@@ -1,4 +1,4 @@
-function output = convolve( input, weights, kSize, pSize )
+function [ output, dA, A ] = convolve( input, weights, kSize, pSize )
 % convolve( input, weights, kSize, pSize )
 % performs mean convolution -> sigmoid activation -> mean pooling
 
@@ -27,7 +27,7 @@ function output = convolve( input, weights, kSize, pSize )
         
         % non-linearity and its gradient
         A = sigm( C_temp ); % vector 1 x pts - kSize + 1
-        dA = A .* (1 - A); % should save this for backprop
+        dA( :, :, ic ) = A .* (1 - A); % save this for backprop
         
         % mean pooling
         P = mean( reshape( A', size(A,2)/pSize, pSize, obs ) ); % vector 1 x pSize

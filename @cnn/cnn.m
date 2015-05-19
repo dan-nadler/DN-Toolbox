@@ -36,8 +36,11 @@ classdef cnn < nn & handle
     end
     
     methods ( Static )
-        output = convolve( input, weights, kSize, pSize ); 
+        [ output, dA, A ] = convolve( input, weights, kSize, pSize ); 
         % convolve( input, weights, kSize, pSize )
+        
+        [ input, dW ] = provolve( err, weights, kSize, pSize, pts, dA )
+        % provolve( err, weights, kSize, pSize )
     end
     
     methods ( Access = protected )
