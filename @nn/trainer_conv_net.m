@@ -11,7 +11,9 @@ function obj = trainer_conv_net( obj )
     layerTypes = obj.options.iniParams.layer_type;
     
     b = 0;
+    
     while batchSize*b < size(obj.X,1)-1
+    
         b = b + 1;
         e = min( batchSize * b, size(obj.X,1) );
         s = batchSize * b - batchSize + 1;
@@ -19,32 +21,13 @@ function obj = trainer_conv_net( obj )
 
         % forward prop
         % input layer activation
-        A{1,1} = obj.X(s:e,:); % input layer
+        A{1,1} = obj.X(s:e,:,:); % input layer
         input{1,1} = A{1,1};
         
         % for each conv-pool layer
         for ic = 1:numConvLayers
-            % convolve
-            % construct 3D matrix of convolution ops
-            conv_mat = obj.Wc{ic} .* ones(1, obj.convLayers.kSize, obj.convLayer.nFeature) / obj.convLayers.kSize;
             
-            % for each feature map
-            for ifea = 1:size(conv_vec,3)
-                conv_vec = conv_mat(1, :, ifea);
-                for ib = 1:actBatchSize
-                    % perform convolve op
-                    conv_output(ib,:,ifea) = conv2( input{1}(ib,:), conv_vec, 'same' );
-                    % trim output vector
-                    conv_output(ib,:,ifea) = output(1:end-1);
-                end
-            end
             
-            % activation function
-            Ac{ic+1,1} = obj.Fc{ic}( conv_output );
-            
-            % pool
-            pSize = obj.convLayers{ic}.pSize;
-            input{ic+1,1} = mean( reshape( Ac{ic+1}, size( Ac{ic+1},2 ) / pSize, pSize, size( Ac{ic+1}, 3 ) ) );
             
         end
         
