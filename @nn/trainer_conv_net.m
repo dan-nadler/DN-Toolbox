@@ -27,12 +27,13 @@ function obj = trainer_conv_net( obj )
         % for each conv-pool layer
         for ic = 1:numConvLayers
             
-            [ c_input{ic+1,1}, dAc{ic,1}, Ac{ic,1} ] = obj.convolve( c_input{ic}, obj.Wc{ic}, ...
-                obj.convLayers{ic}.kSize, obj.convLayers{ic}.pSize );
+            [ c_input{ic+1,1} ] = obj.convolve( c_input{ic}, obj.Wc{ic}, ...
+                obj.Bc{ic}, obj.convLayers{ic}.pSize );
             
         end
         
-        input{1,1} = reshape( c_input{end}, actBatchSize, size(c_input{end},2) * size(c_input{end},3) );
+        input{1,1} = reshape( c_input{end}, actBatchSize, size(c_input{end},2) * size(c_input{end},3) ...
+            * size(c_input{end},4) );
         A{1,1} = input{1};
         
         for i = 1:numLayers

@@ -50,13 +50,13 @@ classdef cnn < nn & handle
             for i = 1:numel(obj.convLayers)
                 nChs = size(obj.X,3);
                 kSize = obj.convLayers{i}.kSize;
-                fNum = obj.obj.convLayers{i}.nFeature;
+                fNum = obj.convLayers{i}.nFeature;
 
                 obj.Wc{i} = randn( fNum, kSize );
                 obj.Bc{i} = randn( fNum, 1 );
             end
             
-            randomInit@nn( obj, obj.convLayers{end}.pSize * size(obj.X,3) );
+            randomInit@nn( obj, obj.convLayers{end}.pSize * nChs * fNum );
             
         end
     end
