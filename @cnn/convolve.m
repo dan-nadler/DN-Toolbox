@@ -1,4 +1,4 @@
-function [ output ] = convolve( input, W, B, pSize )
+function [ output, A ] = convolve( input, W, B, pSize )
 % convolve( input, weights, kSize, pSize )
 % performs mean convolution -> sigmoid activation -> mean pooling
 
@@ -49,5 +49,6 @@ function [ output ] = convolve( input, W, B, pSize )
     end
     
     output = P;
+    A = convolved_features;
 
 end

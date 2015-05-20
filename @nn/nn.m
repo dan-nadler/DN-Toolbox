@@ -53,7 +53,7 @@ classdef nn < handle
             obj.options.corr = false; % compute correlation after each epoch
             obj.options.revertToBest = true; % revert parameters to lowest-error epoch after training
             obj.options.gpu = false; % use GPU for training
-            obj.options.KLbeta = 0; % beta for Kullback-Leibler penalty
+            obj.options.KLbeta = 0; % beta for Kullback-Leibler penalty (WIP)
             obj.options.log = true; % log data throughout training - turn off to conserve memory. Required for revertToBest
             
             obj.options.iniParams.layer_size = layer_size;

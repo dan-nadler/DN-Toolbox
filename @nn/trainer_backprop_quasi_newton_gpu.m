@@ -41,8 +41,8 @@ function obj = trainer_backprop_quasi_newton_gpu( obj )
         
         for i = numLayers:-1:2
             % hidden layer error
-            % error = prior layer error * weight matrix .* dF/dA .* current layer dF/dA
-            errorOut{i-1,1} = errorOut{i} * obj.W{i}' .* dA{i} .* obj.F{i-1,2}( input{i} ) .* drop{i};
+            % error = prior layer error * weight matrix .* dF/dA .* dropout
+            errorOut{i-1,1} = errorOut{i} * obj.W{i}' .* dA{i}  .* drop{i};
             hessian{i-1,1} = ( ...
                                     obj.F{i-1,2}( input{i} + obj.options.hessianStep * errorOut{i-1,1} ) ...
                                   - obj.F{i-1,2}( input{i} ) ...

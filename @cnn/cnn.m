@@ -15,6 +15,10 @@ classdef cnn < nn & handle
             obj.trainer = 'cnn';
             obj.convLayers = conv_layers;
             
+            % Conv Nets get very large. These are turned off to conserve memory.
+            obj.options.log = false;
+            obj.options.revertToBest = false;
+            
             % set conv layer activation functions
             for i = 1:numel(conv_layers)
                 try
@@ -37,7 +41,7 @@ classdef cnn < nn & handle
     end
     
     methods ( Static )
-        [ output ] = convolve( input, W, B, pSize )
+        [ output, A ] = convolve( input, W, B, pSize )
         % convolve( input, weights, kSize, pSize )
         
         [ input, dW ] = provolve( err, weights, kSize, pSize, pts, dA )

@@ -60,8 +60,10 @@ n.train;
 
 layer = convLayer( 5, 2, 'mean', 'sigm', 2, 'mean' );
 t = cnn({layer}, {10,2},{'sigm','smax'});
-t.X = randn( 5000, 10, 30 );
-t.Y = randn( 5000, 2) > 0;
+t.X = randn( 500, 10, 30 );
+t.Y = randn( 500, 2) > 0;
+
+t.options.epochs = 1;
 
 t.train;
 
