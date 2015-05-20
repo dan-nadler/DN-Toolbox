@@ -36,7 +36,7 @@ classdef cnn < nn & handle
     end
     
     methods ( Static )
-        [ output, dA, A ] = convolve( input, weights, kSize, pSize ); 
+        [ output ] = convolve( input, W, B, pSize )
         % convolve( input, weights, kSize, pSize )
         
         [ input, dW ] = provolve( err, weights, kSize, pSize, pts, dA )
@@ -46,11 +46,11 @@ classdef cnn < nn & handle
     methods ( Access = protected )
         function randomInit( obj )
             
-            nChannels = size( obj.X, 3 );
+            nChs = size(obj.X,3);
+            kSize = obj.convLayers{1}.kSize;
+            fNum = obj.obj.convLayers{1}.nFeature;
             
-            for i = 1:numel( obj.convLayers )
-                obj.Wc{i} = randn( nChannels, obj.convLayers{i}.kSize );
-            end
+            obj.Wc{1} = randn( 
             
             randomInit@nn( obj, obj.convLayers{end}.pSize * size(obj.X,3) );
             

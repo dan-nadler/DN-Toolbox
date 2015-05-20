@@ -88,18 +88,21 @@ function obj = trainer_conv_net( obj )
 
         dW = zeros( size( weights ) );
 
-        for ic = 1:chs
+        for ic = 1:chs % for each channel
 
             W = weights( ic, : );
 
-            for io = 1:obs
-
+            for io = 1:obs % for each observation
+                
+                % reverse the pooling operation
+                % pSize -> pts - kSize + 1
                 upsample( io, :, ic ) = kron( pOut(io,:,ic), kron_vec ) .* dAc{numConvLayers}( io, :, ic );
 
-                for iu = 1:numU
+                for iu = 1:numU % for each convolution output
 
+                    % calculate the dW for this channel's weight
                     dW( ic, :, io ) = dW( ic, :, io ) + obj.options.learningRate * ...
-                        ( W * upsample(io,iu,ic) )';
+                        ( W * upsample(io,iu,ic) );
                     
                 end
                 

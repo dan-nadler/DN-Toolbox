@@ -57,3 +57,23 @@ n.Yval = testY;
 n.train;
 
 %% CNN test
+
+layer = convLayer( 5, 2, 'mean', 'sigm', 2, 'mean' );
+t = cnn({layer}, {10,2},{'sigm','smax'});
+t.X = randn( 5000, 10, 30 );
+t.Y = randn( 5000, 2) > 0;
+
+t.train;
+
+
+
+
+
+
+
+
+
+
+
+
+

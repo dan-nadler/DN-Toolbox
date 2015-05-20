@@ -150,7 +150,7 @@ classdef nn < handle
                         obj.F{i,1} = obj.layers.(Fxns{i}).fxn;
                         obj.F{i,2} = obj.layers.(Fxns{i}).grad;
                     catch ME
-                        msg = [ 'Did not recognize layer type: ' Fxns{i} ];
+                        msg = [ 'Error assigning layer type: ' Fxns{i} ];
                         causeException = MException( 'dsnn:setF', msg );
                         ME = addCause( ME, causeException );
                         throw(ME);
