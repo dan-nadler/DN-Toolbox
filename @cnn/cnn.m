@@ -34,6 +34,27 @@ classdef cnn < nn & handle
             
         end
         
+        function obj = train( obj )
+            
+            if isempty( obj.W ) || isempty( obj.Wc )
+                
+                if obj.options.verbose
+                    fprintf('Initializing model with random values.\n\n');
+                end
+                
+                % initialize weights and biases with random values
+                obj.randomInit();
+                
+            end
+            
+            if obj.options.log == true
+                obj.logs.Wc{1} = obj.Wc{1};
+                obj.logs.Bc{1} = obj.Bc{1};
+            end
+            
+            obj = train@nn( obj );
+        end
+        
         function output = propOutputFromInput( obj, input )
             
             in{1} = input;

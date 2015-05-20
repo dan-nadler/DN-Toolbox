@@ -57,16 +57,26 @@ n.Yval = testY;
 n.train;
 
 %% CNN test
+clear
+noise = 10;
 n = 100000;
 k = 10;
-data(:,:,1) = reshape( ones(1,n), [n/k, k, 1] );
-data(:,:,2) = data(:,:,1)/2;
-target = mean( data(:,:,1), 2 );
+data(:,:,1) = reshape( ones(1,n) .* randn(1,n) , [n/k, k, 1] );
+data(:,:,2) = reshape( ones(1,n) .* randn(1,n) , [n/k, k, 1] );
+target = ( mean( data(:,1:3,1), 2 ) + mean( data(:,4:7,2), 2 ) ) / 2;
 
-layer = convLayer( 5, 2, 'mean', 'sigm', 2, 'mean' );
+% add noise to X
+data = data + ( randn(size(data))./noise );
+
+h = size(data,1) *.9;
+
+layer = convLayer( 5, 3, 'mean', 'sigm', 2, 'mean' );
 t = cnn({layer}, {10,1},{'tanh','tanh'});
-t.X = data;
-t.Y = target;
+t.X = data(1:h,:,:);
+t.Y = target(1:h,:);
+
+t.Xval = data(h:end,:,:);
+t.Yval = target(h:end,:);
 
 t.options.epochs = 1;
 t.options.batchSize = 100;
@@ -74,15 +84,15 @@ t.options.learningRate = 0.1;
 
 t.train;
 
+nn = nn( {60, 30, 1}, {'tanh','tanh','tanh'} );
+nn.options.epochs = 15;
+nn.options.learningRate = 0.1;
+nn.options.batchSize = 100;
 
+nn.X = [ data(1:h, :, 1), data(1:h, :, 2) ];
+nn.Y = target(1:h,:,:);
 
+nn.Xval = [ data(h:end, :, 1), data(h:end, :, 2) ];
+nn.Yval = target(h:end,:,:);
 
-
-
-
-
-
-
-
-
-
+nn.train;

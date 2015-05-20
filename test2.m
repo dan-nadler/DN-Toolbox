@@ -32,7 +32,7 @@ model = ols_train(xx(is,:),y(is));
 yfit_perf = ols_predict(model,xx(is,:));
 yhat_perf = ols_predict(model,xx(os,:));
 
-denoiser = n.
+% denoiser = n.
 
 
 clear n

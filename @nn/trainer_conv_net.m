@@ -69,9 +69,15 @@ function obj = trainer_conv_net( obj )
         end
         
         % conv net backprop
+        
         for icLayer = numConvLayers:-1:1
-            c_error{icLayer,1} = errorOut{1} * obj.W{1}';
-
+            
+            if icLayer == numConvLayers
+                c_error{icLayer,1} = errorOut{1} * obj.W{1}';
+            else
+                c_error{icLayer,1} = c_error{icLayer+1,1};
+            end
+            
             err = c_error{icLayer};
             weights = obj.Wc{icLayer};
             kSize = obj.convLayers{icLayer}.kSize;
@@ -147,6 +153,8 @@ function obj = trainer_conv_net( obj )
         
         if obj.options.log
             obj.logs.rmse_batch(end+1,1) = obj.calcRMSE( A{numLayers+1}, obj.Y(s:e,:) );
+            obj.logs.Wc{end+1,1} = obj.Wc{i};
+            obj.logs.Bc{end+1,1} = obj.Bc{i};
         end
     
         
