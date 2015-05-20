@@ -58,12 +58,13 @@ n.train;
 
 %% CNN test
 
-layer = convLayer( 5, 2, 'mean', 'sigm', 2, 'mean' );
+layer = convLayer( 5, 1, 'mean', 'sigm', 2, 'mean' );
 t = cnn({layer}, {10,2},{'sigm','smax'});
-t.X = randn( 500, 10, 30 );
-t.Y = randn( 500, 2) > 0;
+t.X = randn( 100, 10, 1 );
+t.Y = [ ones( 100, 1) zeros(100,1) ];
 
 t.options.epochs = 1;
+t.options.batchSize = 1;
 
 t.train;
 

@@ -16,7 +16,7 @@ classdef cnn < nn & handle
             obj.convLayers = conv_layers;
             
             % Conv Nets get very large. These are turned off to conserve memory.
-            obj.options.log = false;
+            obj.options.log = true;
             obj.options.revertToBest = false;
             
             % set conv layer activation functions
@@ -34,8 +34,18 @@ classdef cnn < nn & handle
             
         end
         
-        function testInit( obj )
-            randomInit(obj);
+        function output = propOutputFromInput( obj, input )
+            
+            in{1} = input;
+            
+            for i = 1:numel( obj.convLayers )
+                in{i+1} = obj.convolve( in{i}, obj.Wc{i}, obj.Bc{i}, obj.convLayers{i}.pSize );
+            end
+            
+            propIn = reshape( in{end}, size(in{end}, 1), ...
+                size( in{end}, 2 ) * size( in{end}, 3 ) * size( in{end}, 4 ) );
+            
+            output = propOutputFromInput@nn( obj, propIn );
         end
         
     end

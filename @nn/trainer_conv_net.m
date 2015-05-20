@@ -69,7 +69,6 @@ function obj = trainer_conv_net( obj )
         end
         
         % conv net backprop
-        tic;
         for icLayer = numConvLayers:-1:1
             c_error{icLayer,1} = errorOut{1} * obj.W{1}';
 
@@ -124,7 +123,6 @@ function obj = trainer_conv_net( obj )
             end
             
         end
-        toc;
         
         % update weights and biases
         
@@ -146,6 +144,11 @@ function obj = trainer_conv_net( obj )
             
             obj.Bc{i} = obj.Bc{i} - obj.options.learningRate * ( sum( c_errorOut{i}, 2 ) / actBatchSize );
         end
+        
+        if obj.options.log
+            obj.logs.rmse_batch(end+1,1) = obj.calcRMSE( A{numLayers+1}, obj.Y(s:e,:) );
+        end
+    
         
     end
 
