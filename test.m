@@ -57,14 +57,20 @@ n.Yval = testY;
 n.train;
 
 %% CNN test
+n = 100000;
+k = 10;
+data(:,:,1) = reshape( ones(1,n), [n/k, k, 1] );
+data(:,:,2) = data(:,:,1)/2;
+target = mean( data(:,:,1), 2 );
 
-layer = convLayer( 5, 1, 'mean', 'sigm', 2, 'mean' );
-t = cnn({layer}, {10,2},{'sigm','smax'});
-t.X = randn( 100, 10, 1 );
-t.Y = [ ones( 100, 1) zeros(100,1) ];
+layer = convLayer( 5, 2, 'mean', 'sigm', 2, 'mean' );
+t = cnn({layer}, {10,1},{'tanh','tanh'});
+t.X = data;
+t.Y = target;
 
 t.options.epochs = 1;
-t.options.batchSize = 1;
+t.options.batchSize = 100;
+t.options.learningRate = 0.1;
 
 t.train;
 
