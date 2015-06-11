@@ -1,20 +1,22 @@
 classdef nn < handle
-% Neural Net class
-% author: Dan Nadler
-%
-% Functions
-% 
-% nn( layer_size <cell array>, layer_type <cell array> )  
-%
-% train()
-%
-% output <vector> = propOutputFromInput( input <vector> )
-%
-% input <vector> = propInputFromOutput( ouput <vetor> )
-%
-% RMSE <float> = calcRMSE( input <vector>, output <vector> )
-%
-
+    % Neural Net class
+    % author: Dan Nadler
+    %
+    % Functions
+    %
+    % nn( layer_size <cell array>, layer_type <cell array> )
+    %
+    % train()
+    %
+    % output <vector> = propOutputFromInput( input <vector> )
+    %
+    % input <vector> = propInputFromOutput( ouput <vetor> )
+    %
+    % RMSE <float> = calcRMSE( input <vector>, output <vector> )
+    %
+    
+    
+    
     properties ( Access = public )
         X % input data
         Y % output (target) data
@@ -38,16 +40,16 @@ classdef nn < handle
     
     methods
         function obj = nn( layer_size, layer_type )
-        % nn( layer_sizes, layer_types )
-        % layer_sizes = cell array of layer sizes
-        % layer_types = cell array of layer types
+            % nn( layer_sizes, layer_types )
+            % layer_sizes = cell array of layer sizes
+            % layer_types = cell array of layer types
             
             % set default options
-            obj.options.batchSize = 100; 
-            obj.options.learningRate = .05; 
+            obj.options.batchSize = 100;
+            obj.options.learningRate = .05;
             obj.options.hessianStep = .0001; % step size used to compute hessian
-            obj.options.epochs = 30; 
-            obj.options.dropoutProb = 0; 
+            obj.options.epochs = 30;
+            obj.options.dropoutProb = 0;
             obj.options.visual = false; % visualization of training. not tested.
             obj.options.verbose = true; % print training progress
             obj.options.corr = false; % compute correlation after each epoch
@@ -68,9 +70,9 @@ classdef nn < handle
             obj.logs.B = {};
             obj.logs.hessian = {};
             % obj.logs.learnMovie = struct;
-        
+            
             % store supported layers
-            obj.layers.sigm.fxn = @(x) 1 ./ (1 + exp(-x) ); %sigmoid            
+            obj.layers.sigm.fxn = @(x) 1 ./ (1 + exp(-x) ); %sigmoid
             obj.layers.sigm.grad = @(x) ( 1 ./ (1 + exp(-x) ) ) .* ( 1 - (1 ./ (1 + exp(-x) )) );
             
             obj.layers.tanh.fxn = @(x) tanh(x); %hyperbolic tangent
@@ -106,7 +108,7 @@ classdef nn < handle
             obj.loss = '';
             
             % set data
-            obj.X = []; 
+            obj.X = [];
             obj.Y = [];
             
             obj.Xval = [];
@@ -128,7 +130,7 @@ classdef nn < handle
         end
         
         function obj = set.N( obj, N )
-        % set layer size
+            % set layer size
             if iscell(N)
                 obj.N = N;
             elseif ismatrix(N)
@@ -143,7 +145,7 @@ classdef nn < handle
         end
         
         function obj = set.F( obj, Fxns )
-        % set layer types by matching provided strings with available types in obj.layers struct
+            % set layer types by matching provided strings with available types in obj.layers struct
             for i = 1:numel(Fxns)
                 if iscell(Fxns)
                     try
@@ -162,7 +164,7 @@ classdef nn < handle
         end
         
         function obj = set.trainer( obj, trainer )
-        % set trainer
+            % set trainer
             switch trainer
                 case 'sgd'
                     obj.trainer = @trainer_backprop_quasi_newton;
@@ -210,22 +212,22 @@ classdef nn < handle
             if obj.options.visual == true
                 figure;
             end
-               
+            
             for i = 1:obj.options.epochs
                 
                 if obj.options.verbose
                     % list current epoch
                     fprintf( 'Epoch %i:\t\t', i );
-
+                    
                     % run training algorithm for 1 epoch
                     obj = obj.trainer( obj );
-
+                    
                     % RMSE of in-sample data
                     model_Y = obj.propOutputFromInput( obj.X );
                     rmse = obj.calcRMSE( model_Y, obj.Y );
                     fprintf( 'RMSE: %f\t', rmse );
                     obj.logs.rmse(end+1,1) = rmse;
-                
+                    
                     % RMSE of validation data
                     if ~isempty( obj.Yval )
                         model_Yval = obj.propOutputFromInput( obj.Xval );
@@ -276,7 +278,7 @@ classdef nn < handle
                         best_epoch = find( obj.logs.rmse  == min( obj.logs.rmse ) );
                     end
                 end
-            
+                
                 if best_epoch < numel( obj.logs.rmse )
                     fprintf( 'Reverting weights and biases to epoch %i.\n', best_epoch );
                     obj.W = obj.logs.W{best_epoch};
@@ -287,13 +289,13 @@ classdef nn < handle
         end
         
         function output = propOutputFromInput( obj, input )
-        % given inputs, predict output
-        % in the future, this will depend on the type of net created
+            % given inputs, predict output
+            % in the future, this will depend on the type of net created
             output = obj.propOutputFromInputFxn( input );
         end
         
         function activation = propInputFromOutput( obj, output )
-        % construct function to activate input layer, given output
+            % construct function to activate input layer, given output
             temp = obj.propInputFromOutputFxn( output );
             activation = temp{1};
         end
@@ -303,7 +305,7 @@ classdef nn < handle
     methods ( Static )
         
         function output = calcRMSE( y, y_hat )
-        % calculate the RMSE given Y and Y hat
+            % calculate the RMSE given Y and Y hat
             output = sqrt( mean( sum( (y - y_hat) .^ 2, 1 ) / size(y_hat,1) ) );
         end
         
@@ -312,7 +314,7 @@ classdef nn < handle
     methods ( Access = protected )
         
         function activation = propOutputFromInputFxn( obj, input )
-        % construct forward propagate function
+            % construct forward propagate function
             
             activation = input;
             % activation = obj.F{1,1}( input * obj.W{1} + repmat( obj.B{1}, size(input,1), 1 ) );
@@ -323,7 +325,7 @@ classdef nn < handle
         end
         
         function activation = propInputFromOutputFxn( obj, output )
-        % construct function to activate input layer, given output
+            % construct function to activate input layer, given output
             activation{numel(obj.W)+1,1} = output;
             b = cell( numel( obj.B ) + 1, 1 );
             b(2:end) = obj.B;
@@ -334,8 +336,8 @@ classdef nn < handle
         end
         
         function randomInit( obj, varargin )
-        % random weights and bias matrix initialization
-        
+            % random weights and bias matrix initialization
+            
             if nargin == 2
                 inSize = varargin{1};
             else
@@ -346,7 +348,7 @@ classdef nn < handle
             
             obj.W{1,1} = randn(inSize,obj.N{1}); %input to hidden weights matrix
             obj.B{1,1} = randn(1,obj.N{1}); %1st hidden layer bias
-
+            
             for i = 2:numLayers
                 obj.W{i,1} = randn(size(obj.W{i-1},2),obj.N{i}); %weights matrix
                 obj.B{i,1} = randn(1,obj.N{i}); %bias

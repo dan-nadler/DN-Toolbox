@@ -77,6 +77,7 @@ classdef cnn < nn & handle
         
         [ input, dW ] = provolve( err, weights, kSize, pSize, pts, dA )
         % provolve( err, weights, kSize, pSize )
+
     end
     
     methods ( Access = protected )
