@@ -1,7 +1,11 @@
 /*==========================================================
-* dn_mex_test.c - test MEX file
+* cnn_backprop.cpp -- performs backprop on a convolutional
+*   /pooling layer pair
 *
-* This is a MEX-file for MATLAB.
+* This is a MEX-file for MATLAB. WIP.
+*
+* Currently performs the most inner loop of backprop for 
+*  a sigmoid activation layer.
 *
 *========================================================*/
 
@@ -37,16 +41,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
 
 	/* check for proper number of arguments */
 	if (nrhs != 3) {
-		mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nrhs", "Two inputs required.");
+		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:nrhs", "Three inputs required.");
 	}
 	if (nlhs != 1) {
-		mexErrMsgIdAndTxt("MyToolbox:arrayProduct:nlhs", "One output required.");
+		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:nlhs", "One output required.");
 	}
 
 	/* make sure the first input argument is type double */
 	if (!mxIsDouble(prhs[0]) ||
 		mxIsComplex(prhs[0])) {
-		mexErrMsgIdAndTxt("MyToolbox:arrayProduct:notDouble", "Input matrix must be type double.");
+		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:notDouble", "Input matrix must be type double.");
 	}
 
 	/* create a pointer to the real data in the input matrix  */
@@ -65,7 +69,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	error_out = mxGetPr(plhs[0]);
 
 	/* call the computational routine */
-	//dn_mex_test(input, output, (mwSize)ncols);
 	upsampled_error_loop(upsampled_error, activations, weights, ncols, kcols, error_out);
 
 }
