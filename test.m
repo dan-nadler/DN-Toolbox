@@ -70,7 +70,7 @@ data = data + ( randn(size(data))./noise );
 
 h = size(data,1) *.9;
 
-layer = convLayer( 5, 3, 'mean', 'sigm', 2, 'mean' );
+layer = convLayer( 5, 15, 'mean', 'sigm', 2, 'mean' );
 t = cnn({layer}, {10,1},{'tanh','tanh'});
 t.X = data(1:h,:,:);
 t.Y = target(1:h,:);

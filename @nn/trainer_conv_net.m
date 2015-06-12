@@ -27,6 +27,7 @@ function obj = trainer_conv_net( obj )
         % for each conv-pool layer
         for ic = 1:numConvLayers
             
+            % c_input{ic+1,1} is the output of layer ic, and is the input to the next layer
             [ c_input{ic+1,1}, Ac{ic} ] = obj.convolve( c_input{ic}, obj.Wc{ic}, ...
                 obj.Bc{ic}, obj.convLayers{ic}.pSize );
             
@@ -106,7 +107,7 @@ function obj = trainer_conv_net( obj )
                     for fi = 1:fNum
 
                         cW = obj.Wc{icLayer}( fi, : );
-                        upsampled_error = kron( kron_vec, pOut( io, :, fi, ic ) );
+                        upsampled_error = kron( pOut( io, :, fi, ic ), kron_vec );
 
                         try
                             % Badass MEX file! Hell yeah :)
