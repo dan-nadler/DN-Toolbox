@@ -34,22 +34,32 @@ void kron(double * kron_vector, double * source_vector, mwSize nK, mwSize nS, do
 	}
 }
 
+/* sigmoid activation function */
+double sigmoidfxn(double in) {
+	double out;
+	out = 1 / (1 + exp(-1 * in));
+	return out;
+}
+
+void sigmoid(double in, double * out) {
+	//*out = 1 / (1 + exp(-1 * in));
+	*out = sigmoidfxn(in);
+}
+
 /* The gateway function */
-void mexFunction(int nlhs, mxArray *plhs[],
-	int nrhs, const mxArray *prhs[])
+void mexFunction(int nlhs, mxArray *plhs[],	int nrhs, const mxArray *prhs[])
 {
-	double * kron_vector;		/* 1xN input matrix */
-	double * source_vector;		/* 1xN input matrix */
+	double * input;		/* 1xN input matrix */
 	size_t nK, nS;				/* size of matrices */
 	double * output;			/* output matrix */
 
 	/* check for proper number of arguments */
-	if (nrhs != 2) {
-		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:nrhs", "Two inputs required.");
+	/*if (nrhs != 1) {
+		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:nrhs", "One inputs required.");
 	}
 	if (nlhs != 1) {
 		mexErrMsgIdAndTxt("DNToolbox:cnnBackprop:nlhs", "One output required.");
-	}
+	}*/
 
 	/* make sure the first input argument is type double */
 	if (!mxIsDouble(prhs[0]) ||
@@ -58,21 +68,20 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	}
 
 	/* create a pointer to the real data in the input matrix  */
-	kron_vector = mxGetPr(prhs[0]);
-	source_vector = mxGetPr(prhs[1]);
+	input = mxGetPr(prhs[0]);
 
 	/* get dimensions of the input matrix */
-	nK = mxGetN(prhs[0]);
-	nS = mxGetN(prhs[1]);
+	//nK = mxGetN(prhs[0]);
+	//nS = mxGetN(prhs[1]);
 
 	/* create the output matrix */
-	plhs[0] = mxCreateDoubleMatrix(1, nS * nK, mxREAL);
+	plhs[0] = mxCreateDoubleMatrix(1, 1, mxREAL);
 
 	/* get a pointer to the real data in the output matrix */
 	output = mxGetPr(plhs[0]);
 
 	/* call the computational routine */
-	kron(kron_vector, source_vector, nK, nS, output );
+	sigmoid( *input, output );
 	
 
 }

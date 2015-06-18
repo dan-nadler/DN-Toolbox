@@ -100,7 +100,7 @@ function obj = trainer_conv_net( obj )
 
                 for io = 1:obs
 
-                    cIn = c_input{icLayer}(io,:,ic);
+                    cIn = c_input{icLayer+1}(io,:,ic);
                     cA = sigm( cIn );
                     cdA = cA .* ( 1 - cA );
 
@@ -108,10 +108,13 @@ function obj = trainer_conv_net( obj )
 
                         cW = obj.Wc{icLayer}( fi, : );
                         upsampled_error = kron( pOut( io, :, fi, ic ), kron_vec );
-
+%                         upsampled_input = kron( cIn, kron_vec );
+                        
                         try
-                            % Badass MEX file! Hell yeah :)
-                            c_errorOut{icLayer}( fi, : ) = cnn_backprop( upsampled_error, Ac{icLayer}( io, :, fi, ic ), cW );
+                            % mex file
+                            [ temp, c_hessian{icLayer} ] = cnn_backprop( upsampled_error, Ac{icLayer}( io, :, fi, ic ), cIn ,cW );
+                            c_errorOut{icLayer}( fi, : )  = c_errorOut{icLayer}( fi, : ) + temp;
+                            clear temp;
                         catch
                             % Slow-ass Matlab loop :(
                             for iu = 1:numel( upsampled_error )

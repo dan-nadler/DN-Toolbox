@@ -12,6 +12,8 @@ function [ output, A ] = convolve( input, W, B, pSize )
     kSize = size( W, 2 );
     fNum = size( W, 1 );
     
+    P = nan([obs,pSize,fNum,chs]);
+    
     convDim = pts - kSize + 1;
     
     output = nan( obs, pSize, chs, fNum );
