@@ -179,8 +179,8 @@ classdef nn < handle
                     obj.trainer = @trainer_tied_weights;
                 case 'cnn'
                     obj.trainer = @trainer_conv_net;
-                case 'makeT'
-                    obj.trainer = @trainer_backprop_quasi_newton_gaaNet;
+                case 'noBias'
+                    obj.trainer = @trainer_backprop_quasi_newton_noBias;
                 otherwise
                     error('DN:Set:Trainer',['Invalid trainer requested: ' trainer]);
             end
