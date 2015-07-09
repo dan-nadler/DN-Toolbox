@@ -15,8 +15,6 @@ classdef nn < handle
     % RMSE <float> = calcRMSE( input <vector>, output <vector> )
     %
     
-    
-    
     properties ( Access = public )
         X % input data
         Y % output (target) data
@@ -89,6 +87,9 @@ classdef nn < handle
             
             obj.layers.avrect.fxn = @(x) abs(x); % absolute value
             obj.layers.avrect.grad = @(x) sign(x);
+            
+            obj.layers.linear.fxn = @(x) x;
+            obj.layers.linear.grad = @(x) ones(size(x));
             
             obj.layers.conv_mean.fxn = @(x) mean(x);
             obj.layers.pool_mean.fxn = @(x) mean(x);
@@ -178,6 +179,8 @@ classdef nn < handle
                     obj.trainer = @trainer_tied_weights;
                 case 'cnn'
                     obj.trainer = @trainer_conv_net;
+                case 'makeT'
+                    obj.trainer = @trainer_backprop_quasi_newton_gaaNet;
                 otherwise
                     error('DN:Set:Trainer',['Invalid trainer requested: ' trainer]);
             end
@@ -187,6 +190,8 @@ classdef nn < handle
             switch lossFxn
                 case 'squared'
                     obj.loss = @(yh,y) ((yh-y).^2)/-2;
+                case 'absolute'
+                    obj.loss = @(yh,y) (yh-y);
                 otherwise
                     if strcmp(obj.options.iniParams.layer_type{end}, 'smax')
                         obj.loss = @(yh,y) ((yh-y).^2)/-2;
@@ -216,8 +221,15 @@ classdef nn < handle
             for i = 1:obj.options.epochs
                 
                 if obj.options.verbose
+                    
                     % list current epoch
-                    fprintf( 'Epoch %i:\t\t', i );
+                    if ~isempty(obj.logs.rmse)
+                        e = numel(obj.logs.rmse);
+                    else
+                        e = i;
+                    end
+                    
+                    fprintf( 'Epoch %i:\t\t', e );
                     
                     % run training algorithm for 1 epoch
                     obj = obj.trainer( obj );
@@ -282,7 +294,9 @@ classdef nn < handle
                 if best_epoch < numel( obj.logs.rmse )
                     fprintf( 'Reverting weights and biases to epoch %i.\n', best_epoch );
                     obj.W = obj.logs.W{best_epoch};
-                    obj.B = obj.logs.B{best_epoch};
+                    if ~strcmp(obj.trainer,'makeT')
+                        obj.B = obj.logs.B{best_epoch}; 
+                    end
                 end
             end
             
